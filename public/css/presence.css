@@ -1,0 +1,173 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* Copyright (C) 2026 Bijstaan */
+/**
+ * Presence bar.
+ *
+ * Sits above the ITIL form. Deliberately quiet when it is only reporting who
+ * is looking, and only picks up colour when there is a claim to respect —
+ * a bar that shouts on every ticket stops being read within a day.
+ */
+
+/* --tblr-bg-surface-tertiary, never --tblr-bg-surface-secondary.
+ *
+ * Core declares `--tblr-bg-surface-secondary: var(--tblr-light)` on :root, and
+ * its dark palette redefines `--tblr-light` to #e6e6e6 without redefining the
+ * surface token — so that one paints a near-white panel on a black page, with
+ * body-coloured (#e6e6e6) text on it. Measured at 1.00:1. The tertiary surface
+ * is derived from the body background and follows the theme.
+ */
+
+.glpipresence-bar {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin: 0 0 .5rem;
+    padding: .375rem .75rem;
+    border-radius: var(--tblr-border-radius, 4px);
+    border: 1px solid transparent;
+    font-size: .8125rem;
+    line-height: 1.4;
+}
+
+.glpipresence-bar.is-hidden,
+.glpipresence-bar.is-dismissed {
+    display: none;
+}
+
+/* Nobody else here: just the claim affordance, near-invisible. */
+.glpipresence-bar.is-quiet {
+    background: transparent;
+    border-color: transparent;
+    opacity: .65;
+    padding-left: 0;
+}
+
+.glpipresence-bar.is-quiet:hover,
+.glpipresence-bar.is-quiet:focus-within {
+    opacity: 1;
+}
+
+/* Someone else is here. */
+.glpipresence-bar.is-active {
+    background: var(--tblr-bg-surface-tertiary, #f6f8fa);
+    border-color: var(--tblr-border-color, #dbe0e5);
+}
+
+/* Someone else has claimed the work — the state worth noticing. */
+.glpipresence-bar.is-claimed {
+    background: var(--tblr-warning-lt, #fff8e6);
+    border-color: var(--tblr-warning, #f5a623);
+}
+
+.glpipresence-people {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.glpipresence-person {
+    display: inline-flex;
+    align-items: center;
+    gap: .375rem;
+    min-width: 0;
+}
+
+.glpipresence-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    color: #fff;
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    flex: 0 0 auto;
+}
+
+.glpipresence-claimicon {
+    font-size: .875rem;
+    flex: 0 0 auto;
+}
+
+.glpipresence-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.glpipresence-person.is-claim .glpipresence-label {
+    font-weight: 600;
+}
+
+.glpipresence-alone {
+    color: var(--tblr-secondary, #6c757d);
+}
+
+/* Typing: the one thing on this bar that should pull the eye. */
+.glpipresence-person.is-typing .glpipresence-label {
+    font-weight: 600;
+}
+
+.glpipresence-person.is-typing .glpipresence-avatar {
+    box-shadow: 0 0 0 2px var(--tblr-primary, #206bc4);
+    animation: glpipresence-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes glpipresence-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: .55; }
+}
+
+.glpipresence-actions {
+    display: flex;
+    align-items: center;
+    gap: .375rem;
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+/* Respect reduced-motion: the pulse is decoration, not information — the
+   bold label already carries the "typing" signal. */
+@media (prefers-reduced-motion: reduce) {
+    .glpipresence-person.is-typing .glpipresence-avatar {
+        animation: none;
+    }
+}
+
+/* --- Dark theme (auror_dark et al.) ----------------------------------------
+ *
+ * Scoped under :root[data-glpi-theme-dark="1"] and this plugin's own
+ * containers only — the light theme is untouched by construction. Numbers
+ * live-measured on auror_dark (body
+ * #1f2936); trust its computed output over constants quoted here.
+ */
+
+/* Muted / helper text on the settings page. Core's `.text-muted` carries
+ * !important, so the VARIABLE is redefined in scope, never the property (a
+ * property override is a silent no-op — this block replaces exactly such a
+ * dead rule that lived inline on the settings page). `.form-text` reads
+ * --tblr-secondary-color, which auror_dark leaves at the body background
+ * with alpha (1.05:1, invisible) — both variables together. `transparent
+ * 10%` measured ~5:1 on body and card; the old 28% under-shot (3.34:1). */
+:root[data-glpi-theme-dark="1"] .glpipresence-config,
+:root[data-glpi-theme-dark="1"] .glpipresence-bar {
+    --tblr-muted: color-mix(in srgb, var(--tblr-body-color), transparent 10%);
+    --tblr-secondary-color: color-mix(in srgb, var(--tblr-body-color), transparent 10%);
+}
+
+/* Avatar initials: white on a per-user hsl(h 45% 42%) chip bottoms out at
+ * 3.21:1 (yellow-green hues) against its own face. The hue is set inline
+ * by presence.js per user, so CSS cannot recolour it directly — instead a
+ * flat translucent-black gradient layer darkens whatever hue the chip got
+ * (worst hue measured ≥5.3:1 with the 30% overlay), keeping the per-user
+ * colour coding. Dark-scoped so the light theme's chips keep their exact
+ * current look. */
+:root[data-glpi-theme-dark="1"] .glpipresence-avatar {
+    background-image: linear-gradient(rgb(0 0 0 / 30%), rgb(0 0 0 / 30%));
+}
