@@ -42,7 +42,7 @@ final class AiTools
             description: 'Who else is looking at this ticket, change or problem right now, who is '
                 . 'typing on it, and who has claimed the work. Check this before writing '
                 . 'anything to a ticket or telling a technician to take the next step on one — '
-                . 'two people working the same ticket is how a customer gets two different '
+                . 'two people working the same ticket is how an entity gets two different '
                 . 'answers, and the person already on it may be mid-reply.',
             schema: [
                 'type'       => 'object',
