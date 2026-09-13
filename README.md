@@ -4,7 +4,7 @@ Collision detection and live presence for technicians on GLPI ITIL objects. Who
 else has this ticket open, who is typing right now, and who has picked the work
 up.
 
-![Claimed ticket](docs/screenshots/presence-claimed.png)
+![Claimed ticket](docs/screenshots/presence-03-claimed.png)
 
 ## Compared to core's ObjectLock
 

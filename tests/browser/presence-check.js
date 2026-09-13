@@ -3,10 +3,15 @@
 // Two technicians, one ticket: verify the glpipresence bar sees them both,
 // reports typing, and honours a soft claim.
 const { chromium } = require('playwright');
+const fs = require('fs');
+const path = require('path');
+const { fullPage } = require('./shot');
+const { openDark, audit } = require('./dark');
 
 const BASE = 'http://localhost:8081';
 const TICKET = process.env.TICKET_ID || '47';
 const SHOTS = process.env.SHOT_DIR || '.';
+const DARK_SHOTS = path.join(SHOTS, 'dark');
 
 async function login(browser, user, pass) {
   const ctx = await browser.newContext({ viewport: { width: 1500, height: 1000 } });
@@ -157,6 +162,28 @@ function check(name, cond, detail) {
   // The claim is A's now and must survive B leaving — it expires on idleness,
   // not on disconnect.
   check('A keeps the claim after B leaves', /you is working this/i.test(afterLeave), afterLeave);
+
+
+  // --- The dark palette --------------------------------------------------
+  //
+  // Presence paints chips and a typing indicator over core's timeline, in
+  // colours of its own — the one place a dark body is most likely to leave
+  // them unreadable.
+  fs.mkdirSync(DARK_SHOTS, { recursive: true });
+  console.log('\nswitching to the dark palette...');
+
+  const dark = await openDark(browser, { plugin: 'glpipresence' });
+
+  await dark.goto(`${BASE}/plugins/glpipresence/front/config.php`, { waitUntil: 'networkidle' });
+  await dark.waitForTimeout(400);
+  let bad = await audit(dark, 'glpipresence-');
+  check('[dark] settings: no near-white panel carrying dark-body text',
+    bad.whiteBg.length === 0, JSON.stringify(bad.whiteBg));
+  check('[dark] settings: muted text meets 4.5:1',
+    bad.lowContrast.length === 0, JSON.stringify(bad.lowContrast));
+  await fullPage(dark, `${DARK_SHOTS}/presence-dark-01-settings.png`);
+
+  check('[dark] no page errors', dark.__darkErrors.length === 0, dark.__darkErrors.join(' | '));
 
   await browser.close();
   console.log(fail.length ? `\n${fail.length} FAILED: ${fail.join(', ')}` : '\nall checks passed');
